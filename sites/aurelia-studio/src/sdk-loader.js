@@ -10,15 +10,15 @@ function injectScript(url, timeoutMs = 12000) {
     s.src = url
     s.async = true
     let done = false
-    const finish = (ok) => {
+    const finish = (result) => {
       if (done) return
       done = true
       clearTimeout(timer)
-      resolve(ok)
+      resolve(result)
     }
-    const timer = setTimeout(() => finish(false), timeoutMs)
-    s.onload = () => finish(!!window.Onion)
-    s.onerror = () => finish(false)
+    const timer = setTimeout(() => finish('timeout'), timeoutMs)
+    s.onload = () => finish(window.Onion ? 'ok' : 'loaded-no-global')
+    s.onerror = () => finish('error')
     document.head.appendChild(s)
   })
 }
@@ -28,14 +28,16 @@ let loadPromise = null
 export function loadOnionSDK() {
   if (loadPromise) return loadPromise
   loadPromise = (async () => {
-    if (window.Onion) return { ok: true, url: 'preloaded', version: window.Onion.VERSION }
+    const attempts = []
+    if (window.Onion) return { ok: true, url: 'preloaded', version: window.Onion.VERSION, attempts }
     for (const url of SDK_CANDIDATES) {
-      const ok = await injectScript(url)
-      if (ok && window.Onion) {
-        return { ok: true, url, version: window.Onion.VERSION }
+      const result = await injectScript(url)
+      attempts.push({ url, result })
+      if (result === 'ok' && window.Onion) {
+        return { ok: true, url, version: window.Onion.VERSION, attempts }
       }
     }
-    return { ok: false, url: null, version: null }
+    return { ok: false, url: null, version: null, attempts }
   })()
   return loadPromise
 }

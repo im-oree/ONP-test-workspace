@@ -7,8 +7,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "sync-animations": "node scripts/sync-animations.mjs"
+    "vercel-build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "sync-animations": "node scripts/sync-animations.mjs",
+    "deploy": "bash scripts/deploy-vercel.sh"
   },
   "devDependencies": {
     "vite": "^5.4.10"

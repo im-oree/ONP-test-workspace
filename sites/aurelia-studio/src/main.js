@@ -194,14 +194,26 @@ async function boot() {
   setupReveals()
 
   const res = await loadOnionSDK()
+  console.log('[aurelia] SDK load result', res)
   if (res.ok) {
-    setChip('ok', `Onion runtime <code>${res.version || 'live'}</code> · ready`)
-    await mountEmbeds()
+    const host = (() => { try { return new URL(res.url, location.href).host } catch { return res.url } })()
+    setChip('ok', `Onion <code>${res.version || 'live'}</code> · from <code>${host}</code> · <a href="/diag.html" style="color:var(--gold)">diag</a>`)
+    try {
+      await mountEmbeds()
+    } catch (e) {
+      console.error('[aurelia] mountEmbeds threw', e)
+      setChip('fail', `Runtime loaded but mounting failed: <code>${(e && e.message) || e}</code> · <a href="/diag.html" style="color:var(--gold)">diag</a>`)
+    }
     // Recalculate pin positions after embeds change layout.
     ScrollTrigger.refresh()
   } else {
-    setChip('fail', 'Onion runtime unavailable — showing posters. Live playback needs network access to the Onion CDN.')
-    console.warn('[aurelia] Onion SDK failed to load from all candidates; posters remain.')
+    // Distinguish "blocked / network" from "loaded but no global".
+    const last = res.attempts[res.attempts.length - 1]
+    const why = res.attempts.some((a) => a.result === 'error' || a.result === 'timeout')
+      ? 'the runtime script was blocked or unreachable (CSP / network)'
+      : 'the runtime loaded but did not expose window.Onion'
+    setChip('fail', `Onion runtime unavailable — ${why}. <a href="/diag.html" style="color:var(--gold)">Run diagnostics →</a>`)
+    console.warn('[aurelia] Onion SDK failed to load from all candidates', res.attempts)
   }
 }
 

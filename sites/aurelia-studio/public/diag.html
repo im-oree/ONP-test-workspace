@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Onion embed diagnostics</title>
+<style>
+  body { margin:0; background:#0b0d12; color:#e8eaed; font:14px/1.6 ui-monospace,Menlo,monospace; padding:20px; }
+  h1 { font-size:16px; color:#e9c46a; }
+  #log { white-space:pre-wrap; background:#05060a; border:1px solid #222; border-radius:8px; padding:14px; }
+  .ok { color:#31c48d; } .bad { color:#e0554b; } .warn { color:#e0a34b; } .dim { color:#8a90a0; }
+  .row { display:flex; gap:16px; flex-wrap:wrap; margin-top:16px; }
+  .box { border:1px solid #222; border-radius:8px; padding:8px; }
+  .box b { display:block; font-size:11px; color:#8a90a0; margin-bottom:6px; }
+  .stage { width:260px; height:160px; background:
+     linear-gradient(45deg,#181818 25%,transparent 25%,transparent 75%,#181818 75%),
+     linear-gradient(45deg,#181818 25%,#111 25%,#111 75%,#181818 75%);
+     background-size:18px 18px; background-position:0 0,9px 9px; }
+</style>
+</head>
+<body>
+<h1>🔬 Onion embed diagnostics</h1>
+<div id="log"></div>
+<div class="row">
+  <div class="box"><b>Onion.mount (direct)</b><div id="stage-direct" class="stage"></div></div>
+  <div class="box"><b>Onion.mountIsolated (iframe)</b><div id="stage-iso" class="stage"></div></div>
+  <div class="box"><b>&lt;onion-player&gt; element</b><div id="stage-el" class="stage"></div></div>
+</div>
+
+<script>
+const logEl = document.getElementById('log')
+const log = (msg, cls='') => { const s=document.createElement('span'); s.className=cls; s.textContent=msg+'\n'; logEl.appendChild(s) }
+
+window.addEventListener('error', e => log('window error: '+(e.message||e.error)+' @ '+(e.filename||''), 'bad'), true)
+window.addEventListener('unhandledrejection', e => log('unhandled rejection: '+(e.reason && (e.reason.message||e.reason)), 'bad'))
+
+log('location.origin = '+location.origin, 'dim')
+log('crossOriginIsolated = '+window.crossOriginIsolated, 'dim')
+log('isSecureContext = '+window.isSecureContext, 'dim')
+
+const CANDIDATES = [
+  '/vendor/onp/onp-runtime.umd.js',
+  'https://1test-onion.vercel.app/onp-runtime.umd.js',
+  'https://1test-onion.vercel.app/embed.js',
+]
+const FILE = '/animations/bouncing-ball.onp'
+
+function inject(url){
+  return new Promise(res=>{
+    log('loading SDK: '+url+' …', 'dim')
+    const s=document.createElement('script')
+    s.src=url
+    s.onload=()=>{ log('  onload fired. window.Onion = '+(!!window.Onion), window.Onion?'ok':'warn'); res(!!window.Onion) }
+    s.onerror=()=>{ log('  onerror (blocked / network / 404): '+url, 'bad'); res(false) }
+    document.head.appendChild(s)
+  })
+}
+
+async function run(){
+  let loaded=false
+  for(const u of CANDIDATES){ if(await inject(u)){ loaded=true; log('SDK loaded from '+u,'ok'); break } }
+  if(!loaded){ log('❌ SDK did not load from any candidate. This is a LOAD problem (CSP / network / blocked external script).','bad'); return }
+
+  log('Onion.VERSION = '+window.Onion.VERSION, 'ok')
+  log('Onion keys = '+Object.keys(window.Onion).join(', '), 'dim')
+
+  // inspect (no GPU needed)
+  try{
+    const bytes = await window.Onion.fetchOnp(FILE)
+    log('fetchOnp('+FILE+') → '+bytes.byteLength+' bytes', 'ok')
+    const info = window.Onion.inspect(bytes)
+    log('inspect → '+info.width+'x'+info.height+' '+info.fps+'fps '+info.durationFrames+'f', 'ok')
+  }catch(e){ log('fetchOnp/inspect FAILED: '+(e.message||e), 'bad') }
+
+  // direct mount
+  try{
+    const p = await window.Onion.mount('#stage-direct', { src: FILE, autoplay:true, loop:true,
+      onReady:()=>log('direct onReady: '+p_?.duration,'ok'),
+      onError:(e)=>log('direct onError: '+(e.message||e),'bad') })
+    var p_ = p
+    log('direct mount OK → '+p.duration+' frames @ '+p.fps+'fps', 'ok')
+  }catch(e){ log('direct mount FAILED: '+(e.message||e), 'bad') }
+
+  // isolated mount
+  try{
+    const h = window.Onion.mountIsolated('#stage-iso', { src: new URL(FILE, location.origin).href,
+      runtimeUrl:'https://1test-onion.vercel.app/onp-runtime.umd.js', autoplay:true, loop:true, lazy:false })
+    log('mountIsolated called; waiting for ready…','dim')
+    Promise.resolve(h.ready).then(()=>log('isolated ready ✔','ok')).catch(e=>log('isolated ready FAILED: '+(e&&(e.message||e)),'bad'))
+    setTimeout(()=>log('isolated frame after 3s = '+h.frame, h.frame!=null?'ok':'warn'), 3000)
+  }catch(e){ log('mountIsolated FAILED: '+(e.message||e), 'bad') }
+
+  // custom element
+  try{
+    if(window.Onion.defineElement) window.Onion.defineElement()
+    const el = document.createElement('onion-player')
+    el.setAttribute('src', FILE); el.setAttribute('autoplay',''); el.setAttribute('loop','')
+    el.style.cssText='display:block;width:100%;height:100%'
+    el.addEventListener('ready',()=>log('onion-player ready ✔','ok'))
+    el.addEventListener('error',(e)=>log('onion-player error: '+(e.detail&&e.detail.error),'bad'))
+    document.getElementById('stage-el').appendChild(el)
+    log('onion-player element appended','dim')
+  }catch(e){ log('onion-player FAILED: '+(e.message||e), 'bad') }
+}
+run()
+</script>
+</body>
+</html>
