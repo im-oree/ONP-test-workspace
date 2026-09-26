@@ -1,0 +1,21 @@
+{
+  "name": "aurelia-studio",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Aurelia — a motion-art atelier landing page and live test harness for Onion .onp embeds",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "vercel-build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "sync-animations": "node scripts/sync-animations.mjs",
+    "deploy": "bash scripts/deploy-vercel.sh"
+  },
+  "devDependencies": {
+    "vite": "^5.4.10"
+  },
+  "dependencies": {
+    "gsap": "^3.13.0"
+  }
+}
