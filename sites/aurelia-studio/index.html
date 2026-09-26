@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aurelia — Motion-Art Atelier</title>
+  <meta name="description" content="Aurelia is a motion-art atelier. A living landing page powered end-to-end by Onion .onp animations." />
+  <link rel="preconnect" href="https://1test-onion.vercel.app" crossorigin />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='none' stroke='%23E9C46A' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='5' fill='%23F4E9CD'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="/src/styles.css" />
+</head>
+<body>
+  <!-- ── Nav ─────────────────────────────────────────────────────────── -->
+  <header class="nav" id="nav">
+    <a class="brand" href="#top">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-word">AURELIA</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#showcase">Motion</a>
+      <a href="#works">Works</a>
+      <a href="#playground">Playground</a>
+      <a href="#studio">Studio</a>
+    </nav>
+    <a class="nav-cta" href="#playground">Open the console</a>
+  </header>
+
+  <main id="top">
+    <!-- ── Hero ──────────────────────────────────────────────────────── -->
+    <section class="hero" id="hero">
+      <div class="hero-anim onp-slot" data-anim="hero" data-mode="iso-hero" aria-hidden="true"></div>
+      <div class="hero-veil" aria-hidden="true"></div>
+      <div class="hero-copy">
+        <p class="eyebrow" data-reveal>Motion-Art Atelier · est. 2026</p>
+        <h1 class="hero-title">
+          <span data-reveal-line>We make brands</span>
+          <span data-reveal-line>move like <em>weather.</em></span>
+        </h1>
+        <p class="hero-sub" data-reveal>
+          Aurelia designs kinetic identities, title sequences and living interfaces.
+          Every frame on this page is a real Onion <code>.onp</code> animation, streamed
+          straight from the source file.
+        </p>
+        <div class="hero-actions" data-reveal>
+          <a class="btn btn-primary" href="#showcase">See it in motion</a>
+          <a class="btn btn-ghost" href="#works">Browse works</a>
+        </div>
+      </div>
+      <div class="hero-scroll" aria-hidden="true"><span></span>scroll</div>
+    </section>
+
+    <!-- ── Marquee ───────────────────────────────────────────────────── -->
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track">
+        <span>KINETIC TYPE</span><i>◦</i><span>TITLE SEQUENCES</span><i>◦</i>
+        <span>LIVING LOGOS</span><i>◦</i><span>MOTION SYSTEMS</span><i>◦</i>
+        <span>KINETIC TYPE</span><i>◦</i><span>TITLE SEQUENCES</span><i>◦</i>
+        <span>LIVING LOGOS</span><i>◦</i><span>MOTION SYSTEMS</span><i>◦</i>
+      </div>
+    </div>
+
+    <!-- ── Scroll-scrubbed showcase (logo heatmap) ───────────────────── -->
+    <section class="showcase" id="showcase">
+      <div class="showcase-pin">
+        <div class="showcase-anim onp-slot" data-anim="heatmap" data-mode="scrub"></div>
+        <div class="showcase-hud">
+          <p class="eyebrow">Scroll-driven playback</p>
+          <h2>The timeline<br>is the scrollbar.</h2>
+          <p class="showcase-note">
+            GSAP <code>ScrollTrigger</code> is scrubbing this Colorama + Deep&nbsp;Glow
+            composition frame-by-frame through the Onion runtime — no video, just the
+            <code>.onp</code> seeking to a computed frame.
+          </p>
+          <div class="scrub-readout">
+            <div class="scrub-bar"><span id="scrub-fill"></span></div>
+            <div class="scrub-nums">
+              frame <b id="scrub-frame">0</b> / <span id="scrub-total">600</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Liquid glass feature ──────────────────────────────────────── -->
+    <section class="feature" id="feature">
+      <div class="feature-text">
+        <p class="eyebrow" data-reveal>Material study</p>
+        <h2 data-reveal>Liquid glass,<br>rendered live.</h2>
+        <p data-reveal>
+          Trimmed strokes, layered photography and refraction — packaged into a single
+          portable file. It autoplays in its own isolated renderer so it can sit
+          anywhere on the page without fighting for the GPU.
+        </p>
+        <ul class="feature-list" data-reveal>
+          <li>Image + text + vector layers</li>
+          <li>Trim-path stroke reveal</li>
+          <li>Transparent, borderless embed</li>
+        </ul>
+      </div>
+      <div class="feature-anim onp-slot" data-anim="liquid" data-mode="iso" data-reveal></div>
+    </section>
+
+    <!-- ── Works gallery ─────────────────────────────────────────────── -->
+    <section class="works" id="works">
+      <div class="section-head">
+        <p class="eyebrow">Selected works</p>
+        <h2>A reel that never renders to video.</h2>
+        <p class="section-lead">
+          Each tile is a separate <code>.onp</code> in its own isolated player, lazily
+          mounted as it scrolls into view.
+        </p>
+      </div>
+      <div class="works-grid" id="works-grid"><!-- cards injected --></div>
+    </section>
+
+    <!-- ── Playground / control room ─────────────────────────────────── -->
+    <section class="playground" id="playground">
+      <div class="section-head">
+        <p class="eyebrow">The console</p>
+        <h2>Drive the runtime.</h2>
+        <p class="section-lead">
+          This tile is the single <em>direct</em> player, so it exposes the full
+          <code>OnionPlayer</code> control surface — transport, speed, direction,
+          bounce, fit-mode, runtime variable overrides and a live snapshot.
+        </p>
+      </div>
+      <div class="console">
+        <div class="console-stage onp-slot" data-anim="monogram" data-mode="direct"></div>
+        <div class="console-panel">
+          <div class="panel-group">
+            <span class="panel-label">Transport</span>
+            <div class="btn-row">
+              <button data-act="play">Play</button>
+              <button data-act="pause">Pause</button>
+              <button data-act="stop">Stop</button>
+              <button data-act="restart">Restart</button>
+            </div>
+          </div>
+          <div class="panel-group">
+            <span class="panel-label">Seek</span>
+            <input type="range" id="seek" min="0" max="359" value="0" />
+          </div>
+          <div class="panel-group">
+            <span class="panel-label">Speed <b id="rate-val">1.0×</b></span>
+            <input type="range" id="rate" min="0.1" max="4" step="0.1" value="1" />
+          </div>
+          <div class="panel-group">
+            <span class="panel-label">Direction &amp; mode</span>
+            <div class="btn-row">
+              <button data-act="fwd">Forward →</button>
+              <button data-act="rev">← Reverse</button>
+              <button data-act="bounce" data-toggle="off">Bounce: off</button>
+            </div>
+          </div>
+          <div class="panel-group">
+            <span class="panel-label">Fit mode</span>
+            <div class="btn-row" id="fit-row">
+              <button data-fit="contain" class="active">contain</button>
+              <button data-fit="cover">cover</button>
+              <button data-fit="fill">fill</button>
+              <button data-fit="none">none</button>
+            </div>
+          </div>
+          <div class="panel-group">
+            <span class="panel-label">Runtime variable override</span>
+            <div class="btn-row">
+              <input type="text" id="var-name" placeholder="name e.g. brandColor" />
+              <input type="text" id="var-val" placeholder="value e.g. #E76F51" />
+              <button data-act="setvar">Set</button>
+            </div>
+          </div>
+          <div class="panel-group snapshot">
+            <span class="panel-label">Live snapshot</span>
+            <pre id="snapshot">awaiting player…</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Studio / CTA ──────────────────────────────────────────────── -->
+    <section class="studio" id="studio">
+      <div class="studio-inner">
+        <p class="eyebrow" data-reveal>The atelier</p>
+        <h2 data-reveal>Motion is our material.</h2>
+        <p data-reveal>
+          Aurelia is a small studio obsessed with how brands behave in time. We build
+          identities as animation systems — portable, resolution-independent and alive
+          on every surface. This entire site is our medium demonstrating itself.
+        </p>
+        <a class="btn btn-primary" href="#top" data-reveal>Start a project</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-brand"><span class="brand-mark" aria-hidden="true"></span> AURELIA</div>
+    <p>Motion-art atelier · A live Onion <code>.onp</code> test harness.</p>
+    <p class="footer-fine">Every animation is a real packaged Onion file, played by the Onion runtime.</p>
+  </footer>
+
+  <!-- SDK status chip -->
+  <div class="sdk-chip" id="sdk-chip" role="status">
+    <span class="dot dot-wait"></span>
+    <span id="sdk-chip-text">Loading Onion runtime…</span>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

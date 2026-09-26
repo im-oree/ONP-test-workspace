@@ -1,0 +1,7 @@
+# Node
+node_modules/
+dist/
+.vite/
+*.log
+# Non-repo scratch (headless browser provisioning)
+/hbx/
