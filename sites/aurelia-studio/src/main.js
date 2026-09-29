@@ -63,11 +63,15 @@ async function mountEmbeds(runtimeUrl) {
   for (const slot of $$('.onp-slot[data-mode="iso"], .onp-slot[data-mode="iso-hero"]')) {
     const meta = ANIMATIONS[slot.dataset.anim]
     const isHero = slot.dataset.mode === 'iso-hero'
-    mountIsolated(slot, meta, {
-      autoplay: true, loop: true,
+    const workCard = slot.closest('.work-card')
+    const handle = mountIsolated(slot, meta, {
+      // Gallery cards stay still until deliberately hovered. Other placements
+      // retain their authored autoplay behaviour.
+      autoplay: !workCard, loop: true,
       lazy: !isHero,
       rootMargin: isHero ? '0px' : '400px',
     })
+    if (workCard && handle) wireHoverPlayback(workCard, handle)
   }
 
   // Scroll-scrubbed showcase (paused; frame driven by ScrollTrigger).
@@ -88,6 +92,25 @@ async function mountEmbeds(runtimeUrl) {
     }, { rootMargin: '500px' })
     observer.observe(directSlot)
   }
+}
+
+// ── Gallery hover playback ─────────────────────────────────────────────
+function wireHoverPlayback(card, handle) {
+  let hovering = false
+  const play = () => {
+    hovering = true
+    card.classList.add('is-playing')
+    Promise.resolve(handle.ready).then(() => { if (hovering) handle.play() }).catch(() => {})
+  }
+  const pause = () => {
+    hovering = false
+    card.classList.remove('is-playing')
+    try { handle.pause() } catch {}
+  }
+  card.addEventListener('pointerenter', play)
+  card.addEventListener('pointerleave', pause)
+  card.addEventListener('focusin', play)
+  card.addEventListener('focusout', pause)
 }
 
 // ── Scroll-driven playback (GSAP ScrollTrigger → seekFrame) ─────────────
