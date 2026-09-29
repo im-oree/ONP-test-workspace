@@ -2,7 +2,7 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { ANIMATIONS } from './onp-config.js'
 import { loadOnionSDK } from './sdk-loader.js'
-import { mountDirect, mountIsolated, paintPoster } from './embeds.js'
+import { mountDirect, mountIsolated, paintPoster, setIsolatedRuntimeUrl } from './embeds.js'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -52,34 +52,72 @@ function paintAllPosters() {
 }
 
 // ── Mount every embed once the SDK is ready ────────────────────────────
-async function mountEmbeds() {
-  // Direct player first (single per-realm). Then all isolated ones.
-  const directSlot = $('.onp-slot[data-mode="direct"]')
-  if (directSlot) {
-    const player = await mountDirect(directSlot, ANIMATIONS[directSlot.dataset.anim], {
-      autoplay: true, loop: true, fitMode: 'contain',
-    })
-    if (player) wireConsole(player)
-  }
+async function mountEmbeds(runtimeUrl) {
+  // Every iframe must use the SDK URL that the loader proved works. Previously
+  // they always used the first CDN URL, even when the loader had fallen back to
+  // another candidate, leaving every iframe on its loading poster forever.
+  setIsolatedRuntimeUrl(runtimeUrl)
 
+  // Start the isolated animations before awaiting the direct playground. A
+  // malformed playground file or renderer stall must not block the whole page.
   for (const slot of $$('.onp-slot[data-mode="iso"], .onp-slot[data-mode="iso-hero"]')) {
     const meta = ANIMATIONS[slot.dataset.anim]
     const isHero = slot.dataset.mode === 'iso-hero'
-    mountIsolated(slot, meta, {
-      autoplay: true, loop: true,
+    const workCard = slot.closest('.work-card')
+    const handle = mountIsolated(slot, meta, {
+      // Gallery cards stay still until deliberately hovered. Other placements
+      // retain their authored autoplay behaviour.
+      autoplay: !workCard, loop: true,
       lazy: !isHero,
       rootMargin: isHero ? '0px' : '400px',
     })
+    if (workCard && handle) wireHoverPlayback(workCard, handle)
   }
 
   // Scroll-scrubbed showcase (paused; frame driven by ScrollTrigger).
   const scrubSlot = $('.onp-slot[data-mode="scrub"]')
   if (scrubSlot) setupScrub(scrubSlot, ANIMATIONS[scrubSlot.dataset.anim])
+
+  // The playground is near the bottom of the page. Do not initialize its
+  // renderer during hero startup; wait until it approaches the viewport.
+  const directSlot = $('.onp-slot[data-mode="direct"]')
+  if (directSlot) {
+    const observer = new IntersectionObserver(async (entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return
+      observer.disconnect()
+      const player = await mountDirect(directSlot, ANIMATIONS[directSlot.dataset.anim], {
+        autoplay: true, loop: true, fitMode: 'contain',
+      })
+      if (player) wireConsole(player)
+    }, { rootMargin: '500px' })
+    observer.observe(directSlot)
+  }
+}
+
+// ── Gallery hover playback ─────────────────────────────────────────────
+function wireHoverPlayback(card, handle) {
+  let hovering = false
+  const play = () => {
+    hovering = true
+    card.classList.add('is-playing')
+    Promise.resolve(handle.ready).then(() => { if (hovering) handle.play() }).catch(() => {})
+  }
+  const pause = () => {
+    hovering = false
+    card.classList.remove('is-playing')
+    try { handle.pause() } catch {}
+  }
+  card.addEventListener('pointerenter', play)
+  card.addEventListener('pointerleave', pause)
+  card.addEventListener('focusin', play)
+  card.addEventListener('focusout', pause)
 }
 
 // ── Scroll-driven playback (GSAP ScrollTrigger → seekFrame) ─────────────
 function setupScrub(slot, meta) {
-  const handle = mountIsolated(slot, meta, { autoplay: false, loop: false, lazy: false })
+  // The showcase is below the fold. Loading it eagerly used to initialize two
+  // 1920×1080 renderers alongside the hero and could starve both GPU contexts.
+  const handle = mountIsolated(slot, meta, { autoplay: false, loop: false, lazy: true, rootMargin: '100px' })
   if (!handle) return
   const total = meta.frames - 1
   $('#scrub-total').textContent = meta.frames
@@ -199,7 +237,7 @@ async function boot() {
     const host = (() => { try { return new URL(res.url, location.href).host } catch { return res.url } })()
     setChip('ok', `Onion <code>${res.version || 'live'}</code> · from <code>${host}</code> · <a href="/diag.html" style="color:var(--gold)">diag</a>`)
     try {
-      await mountEmbeds()
+      await mountEmbeds(res.url)
     } catch (e) {
       console.error('[aurelia] mountEmbeds threw', e)
       setChip('fail', `Runtime loaded but mounting failed: <code>${(e && e.message) || e}</code> · <a href="/diag.html" style="color:var(--gold)">diag</a>`)

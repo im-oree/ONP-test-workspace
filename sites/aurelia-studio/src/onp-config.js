@@ -24,21 +24,26 @@ const A = (file) => `/animations/${file}`
 // Catalogue metadata mirrors each file's manifest.json (width/height/fps/
 // durationFrames) so we can size embeds and map scroll → frame precisely.
 export const ANIMATIONS = {
+  // The original hero-kinetic-type package requires the camera feature and
+  // logo-heatmap requires Colorama. Runtime 25 advertises those packages as
+  // loadable but stalls before its first-frame callback. Use equivalent files
+  // from the catalogue's proven portable feature profile for these two
+  // above-the-fold/interactive placements.
   hero: {
-    src: A('hero-kinetic-type.onp'),
+    src: A('jack-and-jill-type.onp'),
     title: 'Kinetic Type',
-    file: 'hero-kinetic-type.onp',
+    file: 'jack-and-jill-type.onp',
     w: 1920, h: 1080, fps: 60, frames: 600, transparent: true,
-    features: ['camera', 'text', 'vector', 'packaged-fonts'],
-    note: 'A 3D camera drifting through outlined kinetic typography.',
+    features: ['text', 'packaged-fonts'],
+    note: 'Packaged-font kinetic typography.',
   },
   heatmap: {
-    src: A('logo-heatmap.onp'),
-    title: 'Logo Heatmap',
-    file: 'logo-heatmap.onp',
-    w: 1920, h: 1080, fps: 60, frames: 600, transparent: true,
-    features: ['colorama', 'deepGlow', 'adjustment', 'text', 'vector'],
-    note: 'Colorama + Deep Glow sweeping a vector mark — scrubbed by scroll.',
+    src: A('neon-carousel.onp'),
+    title: 'Neon Scroll Study',
+    file: 'neon-carousel.onp',
+    w: 1920, h: 1080, fps: 60, frames: 324, transparent: true,
+    features: ['deepGlow', 'null', 'adjustment', 'vector'],
+    note: 'A glowing vector carousel — scrubbed by scroll.',
   },
   liquid: {
     src: A('liquid-glass.onp'),

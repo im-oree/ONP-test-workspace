@@ -177,6 +177,13 @@ h1, h2 { font-family: var(--serif); font-weight: 500; letter-spacing: -0.02em; l
 .section-head { max-width: 720px; margin: 0 auto clamp(40px, 6vw, 72px); text-align: center; padding: 0 clamp(18px,4vw,48px); }
 .section-head h2 { font-size: clamp(30px, 5vw, 66px); margin: 0 0 18px; }
 .section-lead { color: var(--ink-soft); }
+.hover-play-hint {
+  width: fit-content; margin: 22px auto 0; padding: 7px 12px; border-radius: 999px;
+  display: flex; align-items: center; gap: 8px; color: var(--ink-soft); font-size: 11px;
+  letter-spacing: .12em; text-transform: uppercase; border: 1px solid var(--line);
+  background: rgba(233,196,106,.035);
+}
+.hover-play-hint span { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 10px rgba(233,196,106,.7); }
 
 /* ── Works grid ──────────────────────────────────────────────────────── */
 .works { padding: clamp(70px, 10vw, 130px) clamp(18px, 4vw, 48px); }
@@ -188,6 +195,12 @@ h1, h2 { font-family: var(--serif); font-weight: 500; letter-spacing: -0.02em; l
   position: relative; border-radius: 16px; overflow: hidden;
   border: 1px solid var(--line); background: #100c07;
   box-shadow: 0 24px 70px rgba(0,0,0,0.45);
+  transition: border-color .3s ease, box-shadow .3s ease, transform .3s ease;
+}
+.work-card:hover, .work-card:focus-within, .work-card.is-playing {
+  border-color: rgba(233,196,106,.62);
+  box-shadow: 0 28px 80px rgba(0,0,0,.58), 0 0 34px rgba(233,196,106,.20), 0 0 70px rgba(42,157,143,.10);
+  transform: translateY(-3px);
 }
 .work-card.span-3 { grid-column: span 3; }
 .work-card.span-2 { grid-column: span 2; }
@@ -267,18 +280,32 @@ h1, h2 { font-family: var(--serif); font-weight: 500; letter-spacing: -0.02em; l
 
 .onp-poster { display: grid; place-items: center; overflow: hidden; }
 .onp-poster .poster-inner { display: flex; flex-direction: column; align-items: center; gap: 16px; }
-.poster-orb {
-  width: clamp(70px, 16%, 120px); aspect-ratio: 1; border-radius: 50%;
-  background:
-    radial-gradient(circle at 35% 30%, var(--sand), transparent 60%),
-    conic-gradient(from 0deg, var(--gold), var(--coral), var(--teal), var(--gold));
-  filter: blur(0.3px); animation: orbspin 6s linear infinite; opacity: 0.9;
-  box-shadow: 0 0 60px rgba(233,196,106,0.25);
+.poster-inner { width: min(78%, 360px); }
+.poster-skeleton {
+  height: clamp(90px, 18vw, 160px); border-radius: 12px; overflow: hidden;
+  display: grid; place-items: center; position: relative; margin-bottom: 18px;
+  background: rgba(255,255,255,.025); border: 1px solid rgba(233,196,106,.08);
 }
-@keyframes orbspin { to { transform: rotate(360deg); } }
+.poster-skeleton::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(105deg, transparent 25%, rgba(233,196,106,.10) 42%, transparent 60%);
+  transform: translateX(-100%); animation: skeleton-sweep 1.5s ease-in-out infinite;
+}
+.poster-skeleton i { position: absolute; display: block; border-radius: 999px; background: rgba(233,196,106,.10); }
+.poster-skeleton i:nth-child(1) { width: 28%; aspect-ratio: 1; }
+.poster-skeleton i:nth-child(2) { width: 58%; height: 7px; bottom: 22px; }
+.poster-skeleton i:nth-child(3) { width: 38%; height: 5px; bottom: 10px; opacity: .55; }
+@keyframes skeleton-sweep { to { transform: translateX(100%); } }
 .poster-meta { text-align: center; display: flex; flex-direction: column; gap: 4px; }
 .poster-title { font-family: var(--serif); font-size: 18px; }
 .poster-spec { font-size: 11px; color: var(--ink-dim); font-variant-numeric: tabular-nums; letter-spacing: 0.05em; }
+.onp-load-feedback { margin-top: 18px; width: 100%; }
+.onp-load-row { display: flex; justify-content: space-between; gap: 12px; font-size: 10px; color: var(--ink-dim); }
+.onp-load-row b { color: var(--gold); font-weight: 500; font-variant-numeric: tabular-nums; }
+.onp-progress { height: 3px; margin-top: 7px; overflow: hidden; border-radius: 99px; background: rgba(255,255,255,.07); }
+.onp-progress span { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg,var(--teal),var(--gold)); transition: width .16s ease; }
+.onp-load-feedback.is-indeterminate .onp-progress span { width: 38%!important; animation: progress-indeterminate 1s ease-in-out infinite; }
+@keyframes progress-indeterminate { 0% { transform: translateX(-110%); } 100% { transform: translateX(275%); } }
 
 /* ── SDK status chip ─────────────────────────────────────────────────── */
 .sdk-chip {
