@@ -74,20 +74,27 @@ async function mountEmbeds(runtimeUrl) {
   const scrubSlot = $('.onp-slot[data-mode="scrub"]')
   if (scrubSlot) setupScrub(scrubSlot, ANIMATIONS[scrubSlot.dataset.anim])
 
-  // The direct player is independent of the iframe players. Mount it last so
-  // awaiting its asynchronous setup can never hold up the visible portfolio.
+  // The playground is near the bottom of the page. Do not initialize its
+  // renderer during hero startup; wait until it approaches the viewport.
   const directSlot = $('.onp-slot[data-mode="direct"]')
   if (directSlot) {
-    const player = await mountDirect(directSlot, ANIMATIONS[directSlot.dataset.anim], {
-      autoplay: true, loop: true, fitMode: 'contain',
-    })
-    if (player) wireConsole(player)
+    const observer = new IntersectionObserver(async (entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return
+      observer.disconnect()
+      const player = await mountDirect(directSlot, ANIMATIONS[directSlot.dataset.anim], {
+        autoplay: true, loop: true, fitMode: 'contain',
+      })
+      if (player) wireConsole(player)
+    }, { rootMargin: '500px' })
+    observer.observe(directSlot)
   }
 }
 
 // ── Scroll-driven playback (GSAP ScrollTrigger → seekFrame) ─────────────
 function setupScrub(slot, meta) {
-  const handle = mountIsolated(slot, meta, { autoplay: false, loop: false, lazy: false })
+  // The showcase is below the fold. Loading it eagerly used to initialize two
+  // 1920×1080 renderers alongside the hero and could starve both GPU contexts.
+  const handle = mountIsolated(slot, meta, { autoplay: false, loop: false, lazy: true, rootMargin: '100px' })
   if (!handle) return
   const total = meta.frames - 1
   $('#scrub-total').textContent = meta.frames
