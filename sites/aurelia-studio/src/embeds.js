@@ -3,6 +3,14 @@
 import { ISOLATED_RUNTIME_URL } from './onp-config.js'
 
 let directUsed = false
+let isolatedRuntimeUrl = ISOLATED_RUNTIME_URL
+
+// Isolated players run in another realm and must load the same SDK candidate
+// that actually succeeded in the parent. Keeping the configured URL as a
+// fallback preserves backwards compatibility for preloaded SDKs.
+export function setIsolatedRuntimeUrl(url) {
+  if (url && url !== 'preloaded') isolatedRuntimeUrl = new URL(url, window.location.href).href
+}
 
 const abs = (src) => new URL(src, window.location.origin).href
 
@@ -74,7 +82,7 @@ export function mountIsolated(slot, meta, opts = {}) {
   try {
     const handle = window.Onion.mountIsolated(stage, {
       src: abs(meta.src),
-      runtimeUrl: ISOLATED_RUNTIME_URL,
+      runtimeUrl: isolatedRuntimeUrl,
       autoplay: opts.autoplay ?? true,
       loop: opts.loop ?? true,
       muted: true,

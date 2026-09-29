@@ -2,7 +2,7 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { ANIMATIONS } from './onp-config.js'
 import { loadOnionSDK } from './sdk-loader.js'
-import { mountDirect, mountIsolated, paintPoster } from './embeds.js'
+import { mountDirect, mountIsolated, paintPoster, setIsolatedRuntimeUrl } from './embeds.js'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -52,16 +52,14 @@ function paintAllPosters() {
 }
 
 // ── Mount every embed once the SDK is ready ────────────────────────────
-async function mountEmbeds() {
-  // Direct player first (single per-realm). Then all isolated ones.
-  const directSlot = $('.onp-slot[data-mode="direct"]')
-  if (directSlot) {
-    const player = await mountDirect(directSlot, ANIMATIONS[directSlot.dataset.anim], {
-      autoplay: true, loop: true, fitMode: 'contain',
-    })
-    if (player) wireConsole(player)
-  }
+async function mountEmbeds(runtimeUrl) {
+  // Every iframe must use the SDK URL that the loader proved works. Previously
+  // they always used the first CDN URL, even when the loader had fallen back to
+  // another candidate, leaving every iframe on its loading poster forever.
+  setIsolatedRuntimeUrl(runtimeUrl)
 
+  // Start the isolated animations before awaiting the direct playground. A
+  // malformed playground file or renderer stall must not block the whole page.
   for (const slot of $$('.onp-slot[data-mode="iso"], .onp-slot[data-mode="iso-hero"]')) {
     const meta = ANIMATIONS[slot.dataset.anim]
     const isHero = slot.dataset.mode === 'iso-hero'
@@ -75,6 +73,16 @@ async function mountEmbeds() {
   // Scroll-scrubbed showcase (paused; frame driven by ScrollTrigger).
   const scrubSlot = $('.onp-slot[data-mode="scrub"]')
   if (scrubSlot) setupScrub(scrubSlot, ANIMATIONS[scrubSlot.dataset.anim])
+
+  // The direct player is independent of the iframe players. Mount it last so
+  // awaiting its asynchronous setup can never hold up the visible portfolio.
+  const directSlot = $('.onp-slot[data-mode="direct"]')
+  if (directSlot) {
+    const player = await mountDirect(directSlot, ANIMATIONS[directSlot.dataset.anim], {
+      autoplay: true, loop: true, fitMode: 'contain',
+    })
+    if (player) wireConsole(player)
+  }
 }
 
 // ── Scroll-driven playback (GSAP ScrollTrigger → seekFrame) ─────────────
@@ -199,7 +207,7 @@ async function boot() {
     const host = (() => { try { return new URL(res.url, location.href).host } catch { return res.url } })()
     setChip('ok', `Onion <code>${res.version || 'live'}</code> · from <code>${host}</code> · <a href="/diag.html" style="color:var(--gold)">diag</a>`)
     try {
-      await mountEmbeds()
+      await mountEmbeds(res.url)
     } catch (e) {
       console.error('[aurelia] mountEmbeds threw', e)
       setChip('fail', `Runtime loaded but mounting failed: <code>${(e && e.message) || e}</code> · <a href="/diag.html" style="color:var(--gold)">diag</a>`)
